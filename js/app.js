@@ -138,8 +138,14 @@ jQuery(function ($) {
 			var todos = this.todos;
 			var i = todos.length;
 
+			console.log('data-id: ' + id);
+			console.log('todos.length: ' + i);
+
 			while (i--) {
+				console.log('current todo: ' + todos[i].id + ', current id: ' + id);
+				console.log(todos[i].id.toString() === id.toString());
 				if (todos[i].id === id) {
+					console.log('searching for index: ' + i);
 					return i;
 				}
 			}
@@ -164,7 +170,11 @@ jQuery(function ($) {
 		},
 		toggle: function (e) {
 			var i = this.indexFromEl(e.target);
+			console.log(e.target);
 			this.todos[i].completed = !this.todos[i].completed;
+
+			github.markRead(this.todos[i]);
+
 			this.render();
 		},
 		edit: function (e) {
@@ -207,61 +217,91 @@ jQuery(function ($) {
 		}
 	};
 
-// $.getJSON({
-//     'url': 'http://host.com/action/',
-//     'otherSettings': 'othervalues',
-//     'beforeSend': function(xhr) {
-//         //May need to use "Authorization" instead
-//         xhr.setRequestHeader("Authentication",
-//             "Basic " + encodeBase64(username + ":" + password)
-//     },
-//     success: function(result) {
-//         alert('done');
-//     }
-// });
 	var github = {
-		repos: [],
-		storedRepos: function (repo) {
-			util.store('storedRepos', repo);
+		notifications: [],
+		storedNotifications: function (notification) {
+			util.store('storedNotifications', notification);
 		},
-		getRepos: function() {
+		getNotifications: function() {
 			$.ajax({
-				url: 'https://api.github.com/users/philipqnguyen/repos',
+				// url: 'https://api.github.com/users/philipqnguyen/notifications',
+				url: 'https://api.github.com/notifications?all=true',
 				crossDomain: true,
 			  headers: {
-				  "Authorization": 'token bc4055a1e350bafc2e9c0fc564256e1ac4d31dec'
+				  "Authorization": 'token bc4055a1e350bafc2e9c0fc564256e1ac4d31dec',
 				  },
 				type: "GET",
 				dataType: 'json',
 				async: false,
 				success: function(data) {
-					for(var i = 1; i < data.length; i++) {
-						github.repos.push(data[i].name);
+					console.log(data);
+					for(var i = 0; i < data.length; i++) {
+						github.notifications.push({id: data[i].id, title: data[i].subject.title, unread: data[i].unread});
 					}
-					github.storeRepos();
+					github.storeNotifications(data);
 				}
 			});
 		},
-		storeRepos: function() {
-			console.log(this.repos);
-			for(var i = 0; i < this.repos.length; i++) {
-			// 	console.log(this.repos[i]);
-			// 	util.store('repos', this.repos[i]);
-			// }
-			// util.store('todos-jquery', this.repos);
-				if (window.localStorage['todos-jquery'].indexOf(this.repos[i]) < 0) {
+		storeNotifications: function(data) {
+			console.log(data);
+			for(var i = 0; i < data.length; i++) {
+				if (window.localStorage['todos-jquery'].indexOf(data[i].id) < 0) {
 					App.todos.push({
-						id: util.uuid(),
-						title: this.repos[i],
-						completed: false
+						id: parseInt(data[i].id),
+						title: data[i]['subject'].title,
+						completed: !data[i].unread
 					});
-					// console.log(this.repos[i] + this.storedRepos.indexOf(this.repos[i]));
 					App.render();
 				}
 			}
+		},
+		markReadOnGitHub: function(data) {
+			// data.read = true;
+			// data.unread = false;
+			console.log(data);
+			$.ajax({
+				// url: 'https://api.github.com/users/philipqnguyen/notifications',
+				url: 'https://api.github.com/notifications',
+				crossDomain: true,
+			  headers: {
+				  "Authorization": 'token bc4055a1e350bafc2e9c0fc564256e1ac4d31dec',
+				  },
+				type: "PUT",
+				contentType: "application/json",
+				// dataType: 'json',
+				data: JSON.stringify(data),
+				async: false,
+				// success: function(data) {
+				// 	alert('SUCCESS');
+				// },
+				// error: function() {
+				// 	alert("FAILS");
+				// }
+			});
+		},
+		markRead: function(todo) {
+			$.ajax({
+				// url: 'https://api.github.com/users/philipqnguyen/notifications',
+				url: 'https://api.github.com/notifications',
+				crossDomain: true,
+			  headers: {
+				  "Authorization": 'token bc4055a1e350bafc2e9c0fc564256e1ac4d31dec',
+				  },
+				type: "GET",
+				dataType: 'json',
+				async: false,
+				success: function(data) {
+					for (var i = 0; i < data.length; i++) {
+						if (parseInt(data[i].id) === todo.id) {
+							github.markReadOnGitHub(data[i]);
+						}
+					}
+				}
+			});
 		}
 	};
 
 	App.init();
-	github.getRepos();
+	github.getNotifications();
+	console.log(App.todos);
 });
