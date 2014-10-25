@@ -207,5 +207,61 @@ jQuery(function ($) {
 		}
 	};
 
+// $.getJSON({
+//     'url': 'http://host.com/action/',
+//     'otherSettings': 'othervalues',
+//     'beforeSend': function(xhr) {
+//         //May need to use "Authorization" instead
+//         xhr.setRequestHeader("Authentication",
+//             "Basic " + encodeBase64(username + ":" + password)
+//     },
+//     success: function(result) {
+//         alert('done');
+//     }
+// });
+	var github = {
+		repos: [],
+		storedRepos: function (repo) {
+			util.store('storedRepos', repo);
+		},
+		getRepos: function() {
+			$.ajax({
+				url: 'https://api.github.com/users/philipqnguyen/repos',
+				crossDomain: true,
+			  headers: {
+				  "Authorization": 'token bc4055a1e350bafc2e9c0fc564256e1ac4d31dec'
+				  },
+				type: "GET",
+				dataType: 'json',
+				async: false,
+				success: function(data) {
+					for(var i = 1; i < data.length; i++) {
+						github.repos.push(data[i].name);
+					}
+					github.storeRepos();
+				}
+			});
+		},
+		storeRepos: function() {
+			console.log(this.repos);
+			for(var i = 0; i < this.repos.length; i++) {
+			// 	console.log(this.repos[i]);
+			// 	util.store('repos', this.repos[i]);
+			// }
+			// util.store('todos-jquery', this.repos);
+				if (window.localStorage['todos-jquery'].indexOf(this.repos[i]) < 0) {
+					App.todos.push({
+						id: util.uuid(),
+						title: this.repos[i],
+						completed: false
+					});
+					// console.log(this.repos[i] + this.storedRepos.indexOf(this.repos[i]));
+					App.render();
+				}
+			}
+		}
+	};
+
 	App.init();
+	github.getRepos();
 });
