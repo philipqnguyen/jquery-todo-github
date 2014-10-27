@@ -16,3 +16,7 @@ The majority of this ass has been kept in it's original form. Only a GitHub obje
 ## References
 
 As mentioned, this app is based off of the jQuery TodoMVC which could be found [here](http://todomvc.com/).
+
+## License
+
+MIT
