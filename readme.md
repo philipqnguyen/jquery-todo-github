@@ -2,6 +2,10 @@
 
 This is an app based off of the jQuery TodoMVC example. It has been altered to display my own GitHub notifications.
 
+## Usage
+
+Type this into terminal: `ruby -run -e httpd . -p 3000`, and navigate to localhost:3000 to see the app.
+
 ## Description
 
 The goal of this app is just to work with GitHub's API and to sync up with my own notifications. By checking off a notification on this app, it also marks the notification as "read" on GitHub. In addition, any new GitHub notifications, read or unread will be updated on this app.
